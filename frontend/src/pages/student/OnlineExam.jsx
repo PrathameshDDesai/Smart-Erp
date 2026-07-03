@@ -12,10 +12,10 @@ export default function OnlineExam() {
   const [examResult, setExamResult] = useState(null); // Score tracker
   
   const canvasRef = useRef(null);
+  const videoRef = useRef(null);
+  const screenRef = useRef(null);
   const [model, setModel] = useState(null);
   const [maxPredictions, setMaxPredictions] = useState(0);
-  const webcamRef = useRef(null);
-  const screenRef = useRef(null);
   
   const suspiciousFrames = useRef(0);
   const requestRef = useRef();
@@ -47,7 +47,9 @@ export default function OnlineExam() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (webcamRef.current) webcamRef.current.stop();
+      if (videoRef.current && videoRef.current.srcObject) {
+         videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
       if (screenRef.current) {
         screenRef.current.getTracks().forEach(t => t.stop());
       }
@@ -81,11 +83,12 @@ export default function OnlineExam() {
       setModel(loadedModel);
       setMaxPredictions(loadedModel.getTotalClasses());
 
-      const flip = true; 
-      const wc = new window.tmPose.Webcam(400, 400, flip);
-      await wc.setup();
-      wc.play(); // Removed await per Teachable Machine docs
-      webcamRef.current = wc;
+      // Use Native WebRTC instead of TeachableMachine wrapper to prevent suspension!
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 400 } });
+      if (videoRef.current) {
+         videoRef.current.srcObject = stream;
+         await videoRef.current.play();
+      }
 
       setStatus("AI Proctor Active (Webcam & Screen Recorded)");
       
@@ -97,32 +100,47 @@ export default function OnlineExam() {
   };
 
   const loop = async () => {
-    if (webcamRef.current) {
-      webcamRef.current.update();
-      await predict();
+    if (videoRef.current && videoRef.current.readyState >= 2) {
+      try {
+        await predict();
+      } catch (err) {
+        console.error("AI Loop Error:", err);
+      } finally {
+        requestRef.current = requestAnimationFrame(loop);
+      }
+    } else {
+      // Loop until video is ready
       requestRef.current = requestAnimationFrame(loop);
     }
   };
 
   const predict = async () => {
-    if (!model || !webcamRef.current) return;
+    if (!model || !videoRef.current) return;
     
-    const { pose, posenetOutput } = await model.estimatePose(webcamRef.current.canvas);
+    // Pass the native video tag directly to TM
+    const { pose, posenetOutput } = await model.estimatePose(videoRef.current);
     const prediction = await model.predict(posenetOutput);
 
     let isCheating = false;
+    let isMissing = false;
 
-    prediction.forEach(p => {
-      const className = p.className.toLowerCase();
-      if ((className.includes('away') || className.includes('phone') || className.includes('cheat')) && p.probability > 0.85) {
-        isCheating = true;
-      }
-    });
+    // If posenet cannot find a body, or confidence is very low, the student left the frame
+    if (!pose || pose.score < 0.20) {
+      isCheating = true;
+      isMissing = true;
+    } else {
+      prediction.forEach(p => {
+        const className = p.className.toLowerCase();
+        if ((className.includes('away') || className.includes('phone') || className.includes('cheat')) && p.probability > 0.85) {
+          isCheating = true;
+        }
+      });
+    }
 
     if (isCheating) {
       suspiciousFrames.current += 1;
-      if (suspiciousFrames.current > 60) {
-        addViolation('Suspicious Body Movement or Phone Detected');
+      if (suspiciousFrames.current > 45) { // 45 frames ~ 1.5 seconds
+        addViolation(isMissing ? 'Student Not Visible in Camera' : 'Suspicious Body Movement or Phone Detected');
       }
     } else {
       suspiciousFrames.current = Math.max(0, suspiciousFrames.current - 2);
@@ -133,15 +151,20 @@ export default function OnlineExam() {
 
   const drawPose = (pose) => {
     const canvas = canvasRef.current;
-    if (!canvas || !webcamRef.current) return;
+    if (!canvas || !videoRef.current) return;
     const ctx = canvas.getContext('2d');
     
-    ctx.drawImage(webcamRef.current.canvas, 0, 0);
+    // Clear previous drawing
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (pose) {
-      const minPartConfidence = 0.5;
-      window.tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx, 5, '#00d2ff', '#00d2ff');
-      window.tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, 3, '#ff00aa');
+      try {
+        const minPartConfidence = 0.5;
+        window.tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx, 5, '#00d2ff', '#00d2ff');
+        window.tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, 3, '#ff00aa');
+      } catch (e) {
+        // ignore skeleton drawing errors if any
+      }
     }
   };
 
@@ -170,7 +193,9 @@ export default function OnlineExam() {
 
       // Cleanup
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (webcamRef.current) webcamRef.current.stop();
+      if (videoRef.current && videoRef.current.srcObject) {
+         videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
       if (screenRef.current) screenRef.current.getTracks().forEach(t => t.stop());
       
       setIsStarted(false);
@@ -300,8 +325,27 @@ export default function OnlineExam() {
           borderRadius: '12px', overflow: 'hidden', position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            style={{ 
+              position: 'absolute', width: '100%', height: '100%', 
+              objectFit: 'cover', transform: 'scaleX(-1)', // mirror the video natively
+              display: isStarted ? 'block' : 'none' 
+            }} 
+          />
           {isStarted ? (
-            <canvas ref={canvasRef} width="400" height="400" style={{ width: '100%', height: '100%', objectFit: 'cover' }}></canvas>
+            <canvas 
+              ref={canvasRef} 
+              width="400" 
+              height="400" 
+              style={{ 
+                position: 'absolute', width: '100%', height: '100%', 
+                objectFit: 'cover', zIndex: 10 
+              }} 
+            />
           ) : (
             <span style={{ color: 'var(--text-secondary)' }}>Proctor Offline</span>
           )}

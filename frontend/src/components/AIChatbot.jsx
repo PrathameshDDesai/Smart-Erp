@@ -9,7 +9,11 @@ export default function AIChatbot() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  
   const messagesEndRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recog = SpeechRecognition ? new SpeechRecognition() : null;
@@ -17,6 +21,30 @@ export default function AIChatbot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    let stream = null;
+    if (isOpen) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(s => {
+          stream = s;
+          if (videoRef.current) videoRef.current.srcObject = s;
+          setCameraActive(true);
+        })
+        .catch(err => {
+          console.warn("User blocked camera or no camera available. Text-only mode active.", err);
+          setCameraActive(false);
+        });
+    } else {
+      if (videoRef.current && videoRef.current.srcObject) {
+         videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+      setCameraActive(false);
+    }
+    return () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+  }, [isOpen]);
 
   const speak = (text) => {
     if (!window.speechSynthesis) return;
@@ -62,7 +90,23 @@ export default function AIChatbot() {
     setIsTyping(true);
 
     try {
-      const res = await API.post('/ai/chat', { message: textToSubmit });
+      let imageBase64 = null;
+      if (cameraActive && videoRef.current && canvasRef.current) {
+         const video = videoRef.current;
+         const canvas = canvasRef.current;
+         if (video.videoWidth > 0 && video.videoHeight > 0) {
+             canvas.width = video.videoWidth;
+             canvas.height = video.videoHeight;
+             const ctx = canvas.getContext('2d');
+             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+             imageBase64 = canvas.toDataURL('image/jpeg');
+         }
+      }
+
+      const res = await API.post('/ai/chat', { 
+         message: textToSubmit,
+         imageBase64: imageBase64 
+      });
       const aiReply = res.data.reply;
       
       setMessages(prev => [...prev, { sender: 'ai', text: aiReply }]);
@@ -133,6 +177,10 @@ export default function AIChatbot() {
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'white' }}>EduERP Guide</h3>
               <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Online | Ready to motivate</p>
             </div>
+            
+            {/* Hidden Video and Canvas for reading facial expressions */}
+            <video ref={videoRef} autoPlay playsInline muted style={{ display: 'none' }}></video>
+            <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
           </div>
 
           <div style={{

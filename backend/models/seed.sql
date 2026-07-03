@@ -25,7 +25,11 @@ INSERT INTO Faculty (user_id, first_name, last_name, dept_id) VALUES
 -- Students
 INSERT INTO Students (prn, user_id, first_name, last_name, dept_id, semester) VALUES
     ('PRN001', 4, 'Ritu', 'Patel', 1, 4),
-    ('PRN002', 5, 'Arjun', 'Singh', 1, 4);
+    ('PRN002', 5, 'Arjun', 'Singh', 1, 4),
+    ('PRN003', 4, 'Suraj', 'Rajput', 1, 4),
+    ('PRN004', 4, 'Prathamesh', 'Desai', 1, 4),
+    ('PRN005', 4, 'Sayma', 'Pathan', 1, 4),
+    ('PRN006', 4, 'Prajkta', 'Nandurkar', 1, 4);
 
 -- Subjects
 INSERT INTO Subjects (name, dept_id, semester, credits) VALUES

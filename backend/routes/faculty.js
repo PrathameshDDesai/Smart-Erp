@@ -164,4 +164,21 @@ router.post('/marks', authenticateToken, authorizeRoles('FACULTY', 'ADMIN'), asy
     }
 });
 
+// GET faculty alerts
+router.get('/alerts/all', authenticateToken, authorizeRoles('FACULTY', 'ADMIN'), async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT a.id, a.prn, a.mood, a.suggestions, a.created_at, s.first_name, s.last_name
+            FROM Faculty_Alerts a
+            JOIN Students s ON a.prn = s.prn
+            ORDER BY a.created_at DESC
+            LIMIT 20
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching alerts:', err);
+        res.status(500).json({ error: 'Failed to fetch alerts' });
+    }
+});
+
 module.exports = router;

@@ -196,31 +196,49 @@ export default function StressDetection() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
             <div style={{ 
-              width: '50px', 
-              height: '50px', 
+              width: '60px', 
+              height: '60px', 
               borderRadius: '50%', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              fontSize: '24px',
-              marginRight: '15px',
+              fontSize: '32px',
+              marginRight: '20px',
               background: result.mood === 'Stressed' || result.mood === 'Sad' ? 'rgba(255, 99, 132, 0.2)' : 'rgba(75, 192, 192, 0.2)',
               color: result.mood === 'Stressed' || result.mood === 'Sad' ? '#ff6384' : '#4bc0c0'
             }}>
               {result.mood === 'Happy' ? '😊' : result.mood === 'Sad' ? '😢' : result.mood === 'Stressed' ? '😰' : '😐'}
             </div>
-            <div>
-              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Detected Mood: {result.mood}</h3>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '24px' }}>Detected Mood: {result.mood}</h3>
+              <p style={{ margin: '5px 0 0 0', color: 'var(--text-secondary)' }}>Confidence: <strong>{result.confidence}%</strong></p>
               {result.alertTeacher && (
-                 <span style={{ fontSize: '12px', color: '#ff6384', fontWeight: 'bold' }}>Alert generated for your faculty guide.</span>
+                 <span style={{ fontSize: '13px', color: result.mood === 'Happy' ? '#4bc0c0' : '#ff6384', fontWeight: 'bold', display: 'block', marginTop: '5px' }}>
+                   ✓ Note sent to your faculty guide.
+                 </span>
               )}
             </div>
           </div>
 
-          <h4 style={{ marginBottom: '10px', color: 'var(--text-primary)' }}>Suggested Actions for You:</h4>
+          <div style={{ marginBottom: '25px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Focus & Attention Score</span>
+              <span style={{ fontWeight: 'bold', color: result.focus_score > 70 ? '#4bc0c0' : '#ffca28' }}>{result.focus_score}/100</span>
+            </div>
+            <div style={{ width: '100%', height: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
+               <div style={{ 
+                 height: '100%', 
+                 width: `${result.focus_score}%`, 
+                 background: result.focus_score > 70 ? '#4bc0c0' : result.focus_score > 40 ? '#ffca28' : '#ff6384',
+                 transition: 'width 1s ease-out'
+               }} />
+            </div>
+          </div>
+
+          <h4 style={{ marginBottom: '15px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Suggested Interventions:</h4>
           <ul style={{ paddingLeft: '20px', color: 'var(--text-secondary)' }}>
             {result.suggestions?.map((s, i) => (
-              <li key={i} style={{ marginBottom: '8px' }}>{s}</li>
+              <li key={i} style={{ marginBottom: '10px', lineHeight: '1.5' }}>{s}</li>
             ))}
           </ul>
         </div>

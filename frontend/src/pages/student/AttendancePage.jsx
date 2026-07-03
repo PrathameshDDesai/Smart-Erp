@@ -42,12 +42,14 @@ export default function AttendancePage() {
     <div className="page-content">
       <div className="page-header">
         <div>
-          <h2 className="page-heading">Attendance Record</h2>
+          <h2 className="page-heading">Your Attendance</h2>
           <p className="page-subtitle">PRN: {prn} · Overall: {overall}%</p>
         </div>
-        <span className={`status-pill ${overall >= 75 ? 'pill-green' : 'pill-red'}`}>
-          {overall >= 75 ? '✓ Adequate' : '⚠ Low Attendance'}
-        </span>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <span className={`status-pill ${overall >= 75 ? 'pill-green' : 'pill-red'}`}>
+            {overall >= 75 ? '✓ Adequate' : '⚠ Low Attendance'}
+          </span>
+        </div>
       </div>
 
       <div className="tab-bar">
@@ -122,3 +124,5 @@ export default function AttendancePage() {
     </div>
   );
 }
+
+// trigger reload

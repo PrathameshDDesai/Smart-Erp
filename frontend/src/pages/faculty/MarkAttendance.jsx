@@ -26,7 +26,7 @@ export default function MarkAttendance() {
   const modelRef = useRef(null);
   
   // NOTE: Insert your actual Teachable Machine model URL here
-  const TM_URL = "https://teachablemachine.withgoogle.com/models/X-n8CmSUI/";
+  const TM_URL = "https://teachablemachine.withgoogle.com/models/yDSbNa2dH/";
 
   useEffect(() => {
     async function load() {
@@ -122,12 +122,12 @@ export default function MarkAttendance() {
     if (!modelRef.current || !webcamRef.current) return;
     const predictions = await modelRef.current.predict(webcamRef.current.canvas);
     
-    // Check if any prediction matches a known PRN or Name with > 90% confidence
+    // Check if any prediction matches a known PRN or Name with > 95% confidence
     predictions.forEach(p => {
       // The TM class name could be "PRN001" or "Ritu Patel"
-      const className = p.className.toLowerCase();
+      const className = p.className.toLowerCase().trim();
       
-      if (p.probability > 0.90) {
+      if (p.probability > 0.95) {
         // Try finding student by PRN or Name
         const student = students.find(s => 
           s.prn.toLowerCase() === className || 

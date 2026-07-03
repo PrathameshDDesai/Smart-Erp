@@ -3,3 +3,7 @@ node_modules/
 dist/
 database.sqlite
 .gemini/
+venv/
+venv310/
+__pycache__/
+*.pyc

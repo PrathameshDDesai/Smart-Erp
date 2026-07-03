@@ -59,6 +59,27 @@ router.post('/', authenticateToken, authorizeRoles('FACULTY', 'ADMIN'), async (r
     }
 });
 
+// POST mark self attendance (Student)
+router.post('/self', authenticateToken, authorizeRoles('STUDENT'), async (req, res) => {
+    const { status } = req.body;
+    const date = new Date().toISOString().split('T')[0];
+    try {
+        const [studentRows] = await db.execute('SELECT prn FROM Students WHERE user_id = ?', [req.user.userId]);
+        if (studentRows.length === 0) return res.status(404).json({ error: 'Student not found' });
+        const prn = studentRows[0].prn;
+
+        // Marking for a default subject (1) and faculty (1) for general daily attendance
+        const [result] = await db.execute(
+            'INSERT INTO Attendance (prn, subject_id, faculty_id, date, status) VALUES (?, 1, 1, ?, ?)',
+            [prn, date, status]
+        );
+        res.status(201).json({ message: 'Attendance marked successfully', prn });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // POST bulk mark attendance for a class
 router.post('/bulk', authenticateToken, authorizeRoles('FACULTY', 'ADMIN'), async (req, res) => {
     const { records, subject_id, faculty_id, date } = req.body;

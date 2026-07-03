@@ -7,17 +7,20 @@ export default function FacultyDashboard() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [students, setStudents] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [profRes, studRes] = await Promise.all([
+        const [profRes, studRes, alertsRes] = await Promise.all([
           API.get(`/faculty/by-user/${user.userId}`),
           API.get('/students'),
+          API.get('/faculty/alerts/all').catch(() => ({ data: [] }))
         ]);
         setProfile(profRes.data);
         setStudents(studRes.data);
+        setAlerts(alertsRes.data || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -61,6 +64,53 @@ export default function FacultyDashboard() {
           </div>
         </div>
       </div>
+
+      {alerts.length > 0 && (
+          <div className="dashboard-section">
+            <h3 className="section-title">AI Student Wellness Monitor</h3>
+            <div className="table-card">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Time</th><th>Student</th><th>Mood detected</th><th>Suggested Path</th></tr>
+                  </thead>
+                  <tbody>
+                    {alerts.map(a => {
+                      const isPositive = a.mood === 'Happy';
+                      return (
+                        <tr key={a.id} style={{ background: isPositive ? 'rgba(75, 192, 192, 0.05)' : 'rgba(255, 99, 132, 0.05)' }}>
+                          <td>{new Date(a.created_at).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', month: 'short', day: 'numeric' })}</td>
+                          <td style={{ fontWeight: 'bold' }}>{a.first_name} {a.last_name} ({a.prn})</td>
+                          <td>
+                            <span style={{ 
+                                padding: '4px 10px', 
+                                borderRadius: '15px', 
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                color: isPositive ? '#4bc0c0' : '#ff6384',
+                                background: isPositive ? 'rgba(75, 192, 192, 0.2)' : 'rgba(255, 99, 132, 0.2)'
+                            }}>
+                              {isPositive ? '😊 Happy' : a.mood === 'Sad' ? '😢 Sad' : `😰 ${a.mood}`}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                             {(() => {
+                               try {
+                                 return JSON.parse(a.suggestions).join(' | ');
+                               } catch {
+                                 return a.suggestions;
+                               }
+                             })()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+      )}
 
       <div className="dashboard-section">
         <h3 className="section-title">Students List</h3>
