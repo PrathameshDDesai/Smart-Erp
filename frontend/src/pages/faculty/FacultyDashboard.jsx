@@ -65,52 +65,56 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
-      {alerts.length > 0 && (
-          <div className="dashboard-section">
-            <h3 className="section-title">AI Student Wellness Monitor</h3>
-            <div className="table-card">
-              <div className="table-wrapper">
-                <table className="data-table">
-                  <thead>
-                    <tr><th>Time</th><th>Student</th><th>Mood detected</th><th>Suggested Path</th></tr>
-                  </thead>
-                  <tbody>
-                    {alerts.map(a => {
-                      const isPositive = a.mood === 'Happy';
-                      return (
-                        <tr key={a.id} style={{ background: isPositive ? 'rgba(75, 192, 192, 0.05)' : 'rgba(255, 99, 132, 0.05)' }}>
-                          <td>{new Date(a.created_at).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', month: 'short', day: 'numeric' })}</td>
-                          <td style={{ fontWeight: 'bold' }}>{a.first_name} {a.last_name} ({a.prn})</td>
-                          <td>
-                            <span style={{ 
-                                padding: '4px 10px', 
-                                borderRadius: '15px', 
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                color: isPositive ? '#4bc0c0' : '#ff6384',
-                                background: isPositive ? 'rgba(75, 192, 192, 0.2)' : 'rgba(255, 99, 132, 0.2)'
-                            }}>
-                              {isPositive ? '😊 Happy' : a.mood === 'Sad' ? '😢 Sad' : `😰 ${a.mood}`}
-                            </span>
-                          </td>
-                          <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                             {(() => {
-                               try {
-                                 return JSON.parse(a.suggestions).join(' | ');
-                               } catch {
-                                 return a.suggestions;
-                               }
-                             })()}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+      <div className="dashboard-section">
+        <h3 className="section-title">AI Student Wellness Monitor</h3>
+        <div className="table-card" style={{ padding: alerts.length > 0 ? '0' : '20px', borderRadius: '12px' }}>
+          {alerts.length > 0 ? (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Time</th><th>Student</th><th>Mood detected</th><th>Suggested Path</th></tr>
+                </thead>
+                <tbody>
+                  {alerts.map(a => {
+                    const isPositive = a.mood === 'Happy';
+                    return (
+                      <tr key={a.id} style={{ background: isPositive ? 'rgba(75, 192, 192, 0.05)' : 'rgba(255, 99, 132, 0.05)' }}>
+                        <td>{new Date(a.created_at).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', month: 'short', day: 'numeric' })}</td>
+                        <td style={{ fontWeight: 'bold' }}>{a.first_name} {a.last_name} ({a.prn})</td>
+                        <td>
+                          <span style={{ 
+                              padding: '4px 10px', 
+                              borderRadius: '15px', 
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              color: isPositive ? '#4bc0c0' : '#ff6384',
+                              background: isPositive ? 'rgba(75, 192, 192, 0.2)' : 'rgba(255, 99, 132, 0.2)'
+                          }}>
+                            {isPositive ? '😊 Happy' : a.mood === 'Sad' ? '😢 Sad' : `😰 ${a.mood}`}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                           {(() => {
+                             try {
+                               return JSON.parse(a.suggestions).join(' | ');
+                             } catch {
+                               return a.suggestions;
+                             }
+                           })()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </div>
-      )}
+          ) : (
+            <div style={{ textAlign: 'center', padding: '15px 0', color: 'var(--text-secondary)' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>No student wellness alerts logged yet. Wellness checks showing stress or sadness will appear here automatically.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="dashboard-section">
         <h3 className="section-title">Students List</h3>

@@ -89,3 +89,13 @@ CREATE TABLE IF NOT EXISTS Fees (
     status VARCHAR(10) CHECK(status IN ('PAID', 'PENDING')),
     FOREIGN KEY (prn) REFERENCES Students(prn) ON DELETE CASCADE
 );
+
+-- Faculty Alerts Table for AI Student Wellness Monitor
+CREATE TABLE IF NOT EXISTS Faculty_Alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prn VARCHAR(20),
+    mood VARCHAR(20),
+    suggestions TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (prn) REFERENCES Students(prn) ON DELETE CASCADE
+);

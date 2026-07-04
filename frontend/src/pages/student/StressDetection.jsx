@@ -10,6 +10,26 @@ export default function StressDetection() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [hasCamera, setHasCamera] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const fetchHistory = async () => {
+    try {
+      const prn = user?.role === 'STUDENT' ? user?.prn : null;
+      if (prn) {
+        const res = await fetch(`http://localhost:5000/api/students/wellness/history/${prn}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('erp_token')}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data || []);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching wellness history:", err);
+    }
+  };
 
   useEffect(() => {
     // Request camera access
@@ -25,6 +45,8 @@ export default function StressDetection() {
         console.error("Camera access denied:", err);
         setHasCamera(false);
       });
+
+    fetchHistory();
 
     return () => {
       // Clean up stream on unmount
@@ -97,6 +119,7 @@ export default function StressDetection() {
       
       const data = await res.json();
       setResult(data);
+      fetchHistory();
     } catch (err) {
       console.error(err);
       alert("Error analyzing stress level. Please try again.");
@@ -241,6 +264,57 @@ export default function StressDetection() {
               <li key={i} style={{ marginBottom: '10px', lineHeight: '1.5' }}>{s}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* History section */}
+      {history.length > 0 && (
+        <div style={{ 
+          marginTop: '40px',
+          padding: '25px', 
+          backgroundColor: 'var(--bg-secondary)', 
+          borderRadius: '12px', 
+          border: '1px solid var(--border)' 
+        }}>
+          <h3 style={{ marginBottom: '20px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', paddingBottom: '10px', fontSize: '1.2rem' }}>
+            Past Wellness Checks History
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {history.map((h) => (
+              <div key={h.id} style={{ 
+                padding: '15px', 
+                backgroundColor: 'var(--bg-primary)', 
+                borderRadius: '8px', 
+                borderLeft: `4px solid ${h.mood === 'Happy' ? '#4bc0c0' : h.mood === 'Sad' ? '#ff6384' : h.mood === 'Stressed' ? '#ff6384' : 'var(--text-secondary)'}`
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.2rem' }}>
+                      {h.mood === 'Happy' ? '😊' : h.mood === 'Sad' ? '😢' : h.mood === 'Stressed' ? '😰' : '😐'}
+                    </span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{h.mood}</span>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    {new Date(h.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  <strong>AI Suggestions:</strong>
+                  <ul style={{ margin: '5px 0 0 0', paddingLeft: '20px' }}>
+                    {(() => {
+                      try {
+                        return JSON.parse(h.suggestions).map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ));
+                      } catch {
+                        return <li>{h.suggestions}</li>;
+                      }
+                    })()}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

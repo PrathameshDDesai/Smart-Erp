@@ -9,6 +9,7 @@ export default function StudentDashboard() {
   const [attendanceSummary, setAttendanceSummary] = useState([]);
   const [fees, setFees] = useState([]);
   const [marksSummary, setMarksSummary] = useState([]);
+  const [wellnessHistory, setWellnessHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,14 +19,16 @@ export default function StudentDashboard() {
         const prn = profileRes.data.prn;
         setProfile(profileRes.data);
 
-        const [attRes, feesRes, marksRes] = await Promise.all([
+        const [attRes, feesRes, marksRes, wellnessRes] = await Promise.all([
           API.get(`/attendance/summary/${prn}`),
           API.get(`/fees/${prn}`),
           API.get(`/marks/summary/${prn}`),
+          API.get(`/students/wellness/history/${prn}`).catch(() => ({ data: [] }))
         ]);
         setAttendanceSummary(attRes.data);
         setFees(feesRes.data);
         setMarksSummary(marksRes.data);
+        setWellnessHistory(wellnessRes.data || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -88,6 +91,49 @@ export default function StudentDashboard() {
             <span className="stat-label" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Wellness Check</span>
           </div>
         </Link>
+      </div>
+
+      {/* AI Wellness Section */}
+      <div className="dashboard-section" style={{ marginBottom: '25px' }}>
+        <h3 className="section-title">AI Wellness & Mood Monitor</h3>
+        <div className="table-card" style={{ padding: '20px', borderRadius: '12px' }}>
+          {wellnessHistory.length > 0 ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                <span style={{ fontSize: '2rem' }}>
+                  {wellnessHistory[0].mood === 'Happy' ? '😊' : wellnessHistory[0].mood === 'Sad' ? '😢' : wellnessHistory[0].mood === 'Stressed' ? '😰' : '😐'}
+                </span>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                    Your latest mood was analyzed as <strong>{wellnessHistory[0].mood}</strong>
+                  </h4>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Checked on: {new Date(wellnessHistory[0].created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+              <h5 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Latest Suggestions:</h5>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                {(() => {
+                  try {
+                    return JSON.parse(wellnessHistory[0].suggestions).map((s, i) => (
+                      <li key={i} style={{ marginBottom: '5px' }}>{s}</li>
+                    ));
+                  } catch {
+                    return <li>{wellnessHistory[0].suggestions}</li>;
+                  }
+                })()}
+              </ul>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '10px 0', color: 'var(--text-secondary)' }}>
+              <p style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>You haven't run an AI Wellness & Mood Check yet.</p>
+              <Link to="/student/wellness" style={{ padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', background: 'var(--primary)', color: 'white', display: 'inline-block', fontWeight: '600', fontSize: '0.9rem' }}>
+                Check Your Wellness Now
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Attendance Summary */}

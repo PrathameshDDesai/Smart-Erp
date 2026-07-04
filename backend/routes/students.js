@@ -113,4 +113,30 @@ router.delete('/:prn', authenticateToken, authorizeRoles('ADMIN'), async (req, r
     }
 });
 
+// GET student wellness history (Student, Faculty, or Admin)
+router.get('/wellness/history/:prn', authenticateToken, async (req, res) => {
+    const { prn } = req.params;
+    // Check authorization: if user is student, they can only view their own prn
+    if (req.user.role === 'STUDENT') {
+        const [studentRows] = await db.execute('SELECT prn FROM Students WHERE user_id = ?', [req.user.userId]);
+        if (studentRows.length === 0 || studentRows[0].prn !== prn) {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+    }
+    
+    try {
+        const [rows] = await db.execute(`
+            SELECT id, prn, mood, suggestions, created_at
+            FROM Faculty_Alerts
+            WHERE prn = ?
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [prn]);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching student wellness history:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
