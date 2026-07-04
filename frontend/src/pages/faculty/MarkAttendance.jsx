@@ -26,7 +26,7 @@ export default function MarkAttendance() {
   const modelRef = useRef(null);
   
   // NOTE: Insert your actual Teachable Machine model URL here
-  const TM_URL = "https://teachablemachine.withgoogle.com/models/yDSbNa2dH/";
+  const TM_URL = "https://teachablemachine.withgoogle.com/models/hqmBAXU6_7/";
 
   useEffect(() => {
     async function load() {
