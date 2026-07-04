@@ -117,9 +117,13 @@ The Flask API classifies facial emotions from captured images locally to support
 
 NeuroTrack AI is a standalone interface for monitoring classroom energy levels and student emotional statuses.
 
-1. Navigate to the `NeuroTrack-AI-Prathamesh/` directory:
+1. Navigate to either of the NeuroTrack directories:
    ```bash
+   # For the customized version:
    cd ../NeuroTrack-AI-Prathamesh
+   
+   # OR for the base version:
+   cd ../NeuroTrack-AI
    ```
 2. Activate your virtual environment and install the requirements:
    ```bash
@@ -147,5 +151,6 @@ NeuroTrack AI is a standalone interface for monitoring classroom energy levels a
 * `emotion/`
   * `app.py` - Flask server endpoints.
   * `top_models/` - Local Keras facial emotion recognition weights (`fer.h5`).
-* `NeuroTrack-AI-Prathamesh/`
+* `NeuroTrack-AI-Prathamesh/` & `NeuroTrack-AI/`
   * `app.py` - Streamlit application dashboard interface.
+
