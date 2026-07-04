@@ -81,6 +81,13 @@ export default function StudentDashboard() {
             <span className="stat-label">Online Exam</span>
           </div>
         </Link>
+        <Link to="/student/wellness" className="stat-card" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
+          <div className="stat-icon" style={{ color: 'white' }}>🧠</div>
+          <div className="stat-info">
+            <span className="stat-value" style={{ color: 'white' }}>AI</span>
+            <span className="stat-label" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Wellness Check</span>
+          </div>
+        </Link>
       </div>
 
       {/* Attendance Summary */}

@@ -21,6 +21,8 @@ import AttendancePage from './pages/student/AttendancePage';
 import MarksPage from './pages/student/MarksPage';
 import FeesPage from './pages/student/FeesPage';
 import OnlineExam from './pages/student/OnlineExam';
+import StressDetection from './pages/student/StressDetection';
+
 
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
 import MarkAttendance from './pages/faculty/MarkAttendance';
@@ -71,7 +73,9 @@ export default function App() {
             <Route path="/student/marks" element={<MarksPage />} />
             <Route path="/student/fees" element={<FeesPage />} />
             <Route path="/student/exam" element={<OnlineExam />} />
+            <Route path="/student/wellness" element={<StressDetection />} />
           </Route>
+
 
           {/* ── FACULTY ── */}
           <Route element={<PrivateRoute roles={['FACULTY']}><DashboardLayout /></PrivateRoute>}>

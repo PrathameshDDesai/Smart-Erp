@@ -15,6 +15,7 @@ const menuItems = {
     { path: '/student/attendance', label: 'Attendance', icon: '📋' },
     { path: '/student/marks', label: 'Marks', icon: '📊' },
     { path: '/student/fees', label: 'Fees', icon: '💳' },
+    { path: '/student/wellness', label: 'Wellness Check', icon: '🧠' },
   ],
   FACULTY: [
     { path: '/faculty', label: 'Dashboard', icon: '🏠' },
